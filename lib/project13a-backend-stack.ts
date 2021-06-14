@@ -36,9 +36,6 @@ export class Project13ABackendStack extends cdk.Stack {
       userVerification: {
         emailStyle: cognito.VerificationEmailStyle.LINK,
       },
-      emailSettings: {
-        from: "miansharjeelsafdar@gmail.com",
-      },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       standardAttributes: {
         email: {
