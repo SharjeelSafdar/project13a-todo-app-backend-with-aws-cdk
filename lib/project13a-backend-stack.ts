@@ -79,6 +79,52 @@ export class Project13ABackendStack extends cdk.Stack {
     );
     todosTable.grantReadWriteData(ddbDataSource);
 
+    ddbDataSource.createResolver({
+      typeName: "Query",
+      fieldName: "todos",
+    });
+
+    ddbDataSource.createResolver({
+      typeName: "Mutation",
+      fieldName: "createTodo",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+          },
+          "attributeValues": {
+            "username": $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            #foreach( $entry in $ctx.args.entrySet() )
+              #if( $entry.key != "id" )
+                ,"$entry.key": $util.dynamodb.toDynamoDBJson($entry.value)
+              #end
+            #end
+          },
+          "condition": {
+            "expression": "attribute_not_exists(id)"
+          }
+        }
+      `),
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
+    });
+
+    ddbDataSource.createResolver({
+      typeName: "Mutation",
+      fieldName: "editTodoContent",
+    });
+
+    ddbDataSource.createResolver({
+      typeName: "Mutation",
+      fieldName: "toggleTodoStatus",
+    });
+
+    ddbDataSource.createResolver({
+      typeName: "Mutation",
+      fieldName: "deleteTodo",
+    });
+
     new cdk.CfnOutput(this, "P13aUserPoolsWebClientId", {
       value: userPoolClient.userPoolClientId,
     });
