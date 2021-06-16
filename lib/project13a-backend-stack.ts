@@ -15,6 +15,14 @@ export class Project13ABackendStack extends cdk.Stack {
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    todosTable.addGlobalSecondaryIndex({
+      indexName: "username-index",
+      partitionKey: {
+        name: "username",
+        type: ddb.AttributeType.STRING,
+      },
+      projectionType: ddb.ProjectionType.ALL,
+    });
 
     const userPool = new cognito.UserPool(this, "P13aUserPool", {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -49,9 +57,6 @@ export class Project13ABackendStack extends cdk.Stack {
       authFlows: {
         userPassword: true,
       },
-      // oAuth: {
-
-      // }
     });
 
     const domain = userPool.addDomain("P13aUserPoolDomain", {
@@ -82,6 +87,20 @@ export class Project13ABackendStack extends cdk.Stack {
     ddbDataSource.createResolver({
       typeName: "Query",
       fieldName: "todos",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+        {
+          "version" : "2017-02-28",
+          "operation" : "Query",
+          "index" : "username-index",
+          "query" : {
+            "expression": "username = :username",
+            "expressionValues" : {
+              ":username" : $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            }
+          }
+        }
+      `),
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
     });
 
     ddbDataSource.createResolver({
@@ -92,14 +111,13 @@ export class Project13ABackendStack extends cdk.Stack {
           "version": "2017-02-28",
           "operation": "PutItem",
           "key": {
-            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+            "id": $util.dynamodb.toDynamoDBJson($util.autoId())
           },
           "attributeValues": {
-            "username": $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            "username": $util.dynamodb.toDynamoDBJson($ctx.identity.username),
+            "status": $util.dynamodb.toDynamoDBJson(false)
             #foreach( $entry in $ctx.args.entrySet() )
-              #if( $entry.key != "id" )
-                ,"$entry.key": $util.dynamodb.toDynamoDBJson($entry.value)
-              #end
+              ,"$entry.key": $util.dynamodb.toDynamoDBJson($entry.value)
             #end
           },
           "condition": {
@@ -113,16 +131,79 @@ export class Project13ABackendStack extends cdk.Stack {
     ddbDataSource.createResolver({
       typeName: "Mutation",
       fieldName: "editTodoContent",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+        {
+          "version": "2017-02-28",
+          "operation": "UpdateItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+          },
+          "update": {
+            "expression": "SET content = :newContent",
+            "expressionValues": {
+              ":newContent": $util.dynamodb.toDynamoDBJson($ctx.args.newContent)
+            }
+          },
+          "condition": {
+            "expression": "username = :user",
+            "expressionValues": {
+              ":user": $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            }
+          }
+        }
+      `),
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
     });
 
     ddbDataSource.createResolver({
       typeName: "Mutation",
       fieldName: "toggleTodoStatus",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+        {
+          "version": "2017-02-28",
+          "operation": "UpdateItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+          },
+          "update": {
+            "expression": "SET #oldStatus = :newStatus",
+            "expressionNames": {
+              "#oldStatus": "status"
+            },
+            "expressionValues": {
+              ":newStatus": $util.dynamodb.toDynamoDBJson($ctx.args.newStatus)
+            }
+          },
+          "condition": {
+            "expression": "username = :user",
+            "expressionValues": {
+              ":user": $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            }
+          }
+        }
+      `),
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
     });
 
     ddbDataSource.createResolver({
       typeName: "Mutation",
       fieldName: "deleteTodo",
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+        {
+          "version": "2017-02-28",
+          "operation": "DeleteItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+          },
+         "condition": {
+            "expression": "username = :user",
+            "expressionValues": {
+              ":user": $util.dynamodb.toDynamoDBJson($ctx.identity.username)
+            }
+          }
+        }
+      `),
+      responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
     });
 
     new cdk.CfnOutput(this, "P13aUserPoolsWebClientId", {
@@ -137,6 +218,10 @@ export class Project13ABackendStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "domain", {
       value: domain.domainName,
+    });
+
+    new cdk.CfnOutput(this, "P13aGraphQLApiId", {
+      value: gqlApi.apiId,
     });
   }
 }
