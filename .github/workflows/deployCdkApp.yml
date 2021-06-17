@@ -1,0 +1,58 @@
+name: Deploy Project 13A- Gatsby Contentful Blogsite
+env:
+  owner: SharjeelSafdar
+  repo: project13a-todo-app-backend-with-aws-cdk
+
+# Controls when the action will run. Triggers the workflow on
+# 1) push event for main branch
+# 2) pull_request generated on main branch
+on:
+  push:
+    branch: [main]
+  pull_request:
+    branch: [main]
+
+jobs:
+  # This workflow builds the react app on a Ubuntu VM and deploys it to surge.
+  DeployApp:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout the Repository
+        uses: actions/checkout@v2
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with: { node-version: "14.15.0" }
+
+      - name: Install Dependencies
+        uses: jaid/action-npm-install@v1.2.1
+
+      - name: Build CDK App with TypeScript Compiler
+        run: npm run build
+
+      - name: Run tests with Jest
+        run: npm run test
+
+      - name: Deploy Backend Stack
+        uses: KikeMendez/automate-cdk-github-action-kmzz:v1.0.0@master
+        with:
+          cdk_version: "1.108.1"
+          cdk_action: "deploy"
+          cdk_stack: "Project13ATodoAppBackendWithAwsCdkStack"
+          cdk_stack_directory: "/"
+
+      - name: Deploy Frontend CI/CD Pipeline Stack
+        uses: KikeMendez/automate-cdk-github-action-kmzz:v1.0.0@master
+        with:
+          cdk_version: "1.108.1"
+          cdk_action: "deploy"
+          cdk_stack: "Project13ATodoAppFrontendDeploy"
+          cdk_stack_directory: "/"
