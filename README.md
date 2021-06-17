@@ -19,9 +19,9 @@ Stack 2 contains a CI/CD pipeline to deploy frontend client. It has the followin
 - A S3 Bucket with public access to store the static assets of Gatsby web app
 - A Cloud Front Distribution to serve the static assets through a CDN
 - A Code Pipeline with the following three stages:
-  - The first stage gets the source code from the GitHub repo
-  - The second stage builds the Gatsby app using the Code Build project
-  - The third stage deploys the static web assets to the S3 Bucket
+  1. The first stage gets the source code from the GitHub repo
+  2. The second stage builds the Gatsby app using the Code Build project
+  3. The third stage deploys the static web assets to the S3 Bucket
 
 ## Useful commands
 
