@@ -58,7 +58,7 @@ export class Project13aFrontendDeployStack extends cdk.Stack {
           actionName: "CheckoutGithubSuurce",
           owner: "SharjeelSafdar",
           repo: "project13a-serverless-jamstack-todo-app-with-aws-cdk",
-          branch: "dev",
+          branch: "main",
           oauthToken: cdk.SecretValue.secretsManager(
             "arn:aws:secretsmanager:us-east-2:731540390537:secret:GithubToken-cY2y6b"
           ),
