@@ -223,5 +223,7 @@ export class Project13ABackendStack extends cdk.Stack {
     new cdk.CfnOutput(this, "P13aGraphQLApiId", {
       value: gqlApi.apiId,
     });
+
+    cdk.Tags.of(this).add("Project", "P13a-Todo-App-with-AWS");
   }
 }
