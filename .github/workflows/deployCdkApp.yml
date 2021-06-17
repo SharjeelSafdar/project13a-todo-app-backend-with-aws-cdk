@@ -6,11 +6,14 @@ env:
 # Controls when the action will run. Triggers the workflow on
 # 1) push event for main branch
 # 2) pull_request generated on main branch
+# 3) it's not triggered by the changes in the REAMME.md file
 on:
   push:
     branch: [main]
+    paths-ignore: ["README.md"]
   pull_request:
     branch: [main]
+    paths-ignore: ["README.md"]
 
 jobs:
   # This workflow builds the react app on a Ubuntu VM and deploys it to surge.
