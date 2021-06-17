@@ -42,7 +42,7 @@ jobs:
         run: npm run test
 
       - name: Deploy Backend Stack
-        uses: KikeMendez/automate-cdk-github-action-kmzz:v1.0.0@master
+        uses: docker://kikemnzz/automate-cdk-github-action-kmzz:v1.0.0
         with:
           cdk_version: "1.108.1"
           cdk_action: "deploy"
@@ -50,7 +50,7 @@ jobs:
           cdk_stack_directory: "/"
 
       - name: Deploy Frontend CI/CD Pipeline Stack
-        uses: KikeMendez/automate-cdk-github-action-kmzz:v1.0.0@master
+        uses: docker://kikemnzz/automate-cdk-github-action-kmzz:v1.0.0
         with:
           cdk_version: "1.108.1"
           cdk_action: "deploy"
