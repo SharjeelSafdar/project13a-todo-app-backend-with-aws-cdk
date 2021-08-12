@@ -2,6 +2,10 @@
 
 This AWS CDK App deploys the backend infrastructure for [Project 13A](https://github.com/SharjeelSafdar/project13a-serverless-jamstack-todo-app-with-aws-cdk). The app consists of two stacks.
 
+<p align="center">
+  <img alt="Architecture Diagram" src="./P13a AWS Architecture.jpg" />
+</p>
+
 ## Stack 1: AppSync GraphQL API and DynamoDB Table
 
 Stack 1 contanis the AWS services used by the web client. It has the following constructs:
